@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    /* Output settings */
+    "target": "ES2020",
+    "module": "CommonJS",
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    /* Node.js compatibility */
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "types": ["node"],
+
+    /* Type checking & quality */
+    "strict": true,
+    "skipLibCheck": true,
+
+    /* Maps and declarations (optional but nice for debugging) */
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
