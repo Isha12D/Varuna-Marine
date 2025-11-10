@@ -44,7 +44,7 @@ export default function Pooling() {
 
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Pooling (Dummy Data)</h2>
+      <h2 className="text-xl font-bold mb-4">Pooling </h2>
 
       <div className="mb-4">
         <label>Year: </label>
