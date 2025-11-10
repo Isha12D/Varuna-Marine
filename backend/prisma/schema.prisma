@@ -1,0 +1,25 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Route {
+  id             Int     @id @default(autoincrement())
+  routeId        String  @unique
+  vesselType     String
+  fuelType       String
+  year           Int
+  ghgIntensity   Float
+  fuelConsumption Float
+  distance       Float
+  totalEmissions Float
+  isBaseline     Boolean @default(false)
+}
+
+
+
