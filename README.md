@@ -1,4 +1,3 @@
-2. README.md
 # FuelEU Maritime Compliance Dashboard
 
 ## Overview
@@ -9,7 +8,6 @@ The platform computes Compliance Balance (CB), manages banking and pooling of CB
 - **Frontend:** React + TypeScript + TailwindCSS  
 - **Backend:** Node.js + TypeScript + PostgreSQL  
 - **Pattern:** Hexagonal architecture (core domain, ports, adapters)  
-
 
 
 src/
@@ -35,8 +33,6 @@ npm install
 
 
 Setup .env file:
-
-DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/fueleu
 
 
 Run Prisma migrations & seed data:

@@ -1,9 +1,4 @@
 
----
-
-### **3. REFLECTION.md**
-
-```markdown
 # Reflection on AI Agent Usage
 
 During the development of the FuelEU Maritime compliance dashboard, I leveraged several AI agents to accelerate coding and improve code quality.
