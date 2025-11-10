@@ -1,132 +1,157 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
 
 interface BankingRecord {
   id: string;
   year: number;
-  action: string;
+  action: "BANK" | "APPLY";
   amount: number;
   createdAt: string;
 }
 
-interface Ship {
-  id: string;
-  name: string;
+interface ShipCB {
   cb: number;
   bankedCB: number;
 }
 
-export default function BankingTab() {
-  const [ship, setShip] = useState<Ship | null>(null);
-  const [records, setRecords] = useState<BankingRecord[]>([]);
-  const [amount, setAmount] = useState("");
+const Banking: React.FC = () => {
+  const [shipId, setShipId] = useState(""); // selected ship
   const [year, setYear] = useState(new Date().getFullYear());
-  const [message, setMessage] = useState("");
+  const [cbData, setCbData] = useState<ShipCB>({ cb: 0, bankedCB: 0 });
+  const [records, setRecords] = useState<BankingRecord[]>([]);
+  const [amount, setAmount] = useState<number | "">("");
 
-  useEffect(() => {
-    // Fetch the first ship just for demo
-    axios.get("http://localhost:5000/ships").then((res) => {
-      setShip(res.data[0]);
-    });
-  }, []);
-
-  useEffect(() => {
-    if (ship) {
-      axios
-        .get(`http://localhost:5000/banking/records?shipId=${ship.id}&year=${year}`)
-        .then((res) => setRecords(res.data));
+  const fetchRecords = async () => {
+    if (!shipId) return;
+    try {
+      const res = await axios.get(`/banking/records`, {
+        params: { shipId, year },
+      });
+      setRecords(res.data);
+      // fetch current CB from last record or separate API if needed
+      const latestCB = res.data.reduce(
+        (acc: ShipCB, rec: BankingRecord) => {
+          if (rec.action === "BANK") {
+            return { ...acc, cb: acc.cb - rec.amount, bankedCB: acc.bankedCB + rec.amount };
+          }
+          if (rec.action === "APPLY") {
+            return { ...acc, cb: acc.cb + rec.amount, bankedCB: acc.bankedCB - rec.amount };
+          }
+          return acc;
+        },
+        { cb: 100, bankedCB: 0 } // default initial CB
+      );
+      setCbData(latestCB);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to fetch records");
     }
-  }, [ship, year]);
+  };
+
+  useEffect(() => {
+    fetchRecords();
+  }, [shipId, year]);
 
   const handleBank = async () => {
+    if (!amount || amount <= 0) return alert("Enter a valid amount");
     try {
-      const res = await axios.post("http://localhost:5000/banking/bank", {
-        shipId: ship?.id,
-        year,
-        amount: parseFloat(amount),
-      });
-      setMessage(res.data.message);
+      const res = await axios.post(`/banking/bank`, { shipId, year, amount });
+      alert(res.data.message);
+      setAmount("");
+      fetchRecords();
     } catch (err: any) {
-      setMessage(err.response?.data?.error || "Banking failed");
+      alert(err.response?.data?.error || "Bank failed");
     }
   };
 
   const handleApply = async () => {
+    if (!amount || amount <= 0) return alert("Enter a valid amount");
     try {
-      const res = await axios.post("http://localhost:5000/banking/apply", {
-        shipId: ship?.id,
-        year,
-        amount: parseFloat(amount),
-      });
-      setMessage(res.data.message);
+      const res = await axios.post(`/banking/apply`, { shipId, year, amount });
+      alert(res.data.message);
+      setAmount("");
+      fetchRecords();
     } catch (err: any) {
-      setMessage(err.response?.data?.error || "Apply failed");
+      alert(err.response?.data?.error || "Apply failed");
     }
   };
 
   return (
-    <div className="p-6 bg-white rounded-2xl shadow-md">
-      <h1 className="text-2xl font-semibold mb-6 text-center">FuelEU Banking</h1>
+    <div className="p-4 max-w-4xl mx-auto">
+      <h1 className="text-xl font-bold mb-4">Banking Tab</h1>
 
-      {ship ? (
-        <>
-          <div className="mb-4">
-            <p>Ship: <b>{ship.name}</b></p>
-            <p>CB: <b>{ship.cb}</b></p>
-            <p>Banked CB: <b>{ship.bankedCB}</b></p>
-          </div>
+      <div className="flex gap-4 mb-4">
+        <input
+          type="text"
+          placeholder="Ship ID"
+          value={shipId}
+          onChange={(e) => setShipId(e.target.value)}
+          className="border px-2 py-1 rounded"
+        />
+        <input
+          type="number"
+          placeholder="Year"
+          value={year}
+          onChange={(e) => setYear(Number(e.target.value))}
+          className="border px-2 py-1 rounded"
+        />
+      </div>
 
-          <div className="flex gap-3 mb-4">
-            <input
-              type="number"
-              placeholder="Amount"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="border px-3 py-2 rounded w-40"
-            />
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded disabled:opacity-50"
-              onClick={handleBank}
-              disabled={!ship || ship.cb <= 0}
-            >
-              Bank CB
-            </button>
-            <button
-              className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
-              onClick={handleApply}
-              disabled={!ship || ship.bankedCB <= 0}
-            >
-              Apply Banked CB
-            </button>
-          </div>
+      <div className="mb-4">
+        <p>Current CB: {cbData.cb.toFixed(2)}</p>
+        <p>Banked CB: {cbData.bankedCB.toFixed(2)}</p>
+      </div>
 
-          {message && <p className="text-blue-600 mb-4">{message}</p>}
+      <div className="flex gap-2 mb-4">
+        <input
+          type="number"
+          placeholder="Amount"
+          value={amount}
+          onChange={(e) => setAmount(Number(e.target.value))}
+          className="border px-2 py-1 rounded w-32"
+        />
+        <button
+          onClick={handleBank}
+          disabled={cbData.cb <= 0}
+          className={`px-4 py-2 rounded text-white ${
+            cbData.cb <= 0 ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+          }`}
+        >
+          Bank
+        </button>
+        <button
+          onClick={handleApply}
+          disabled={cbData.bankedCB <= 0}
+          className={`px-4 py-2 rounded text-white ${
+            cbData.bankedCB <= 0 ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+          }`}
+        >
+          Apply
+        </button>
+      </div>
 
-          <h3 className="font-semibold text-lg mb-2">Banking History</h3>
-          <table className="min-w-full border text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border px-3 py-2">Action</th>
-                <th className="border px-3 py-2">Amount</th>
-                <th className="border px-3 py-2">Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {records.map((r) => (
-                <tr key={r.id}>
-                  <td className="border px-3 py-2">{r.action}</td>
-                  <td className="border px-3 py-2">{r.amount}</td>
-                  <td className="border px-3 py-2">
-                    {new Date(r.createdAt).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      ) : (
-        <p className="text-center text-gray-500">Loading ship data...</p>
-      )}
+      <table className="w-full border-collapse border border-gray-300">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="border px-2 py-1">Year</th>
+            <th className="border px-2 py-1">Action</th>
+            <th className="border px-2 py-1">Amount</th>
+            <th className="border px-2 py-1">Created At</th>
+          </tr>
+        </thead>
+        <tbody>
+          {records.map((rec) => (
+            <tr key={rec.id}>
+              <td className="border px-2 py-1">{rec.year}</td>
+              <td className="border px-2 py-1">{rec.action}</td>
+              <td className="border px-2 py-1">{rec.amount.toFixed(2)}</td>
+              <td className="border px-2 py-1">{new Date(rec.createdAt).toLocaleString()}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
-}
+};
+
+export default Banking;

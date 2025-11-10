@@ -7,39 +7,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model Route {
-  id             Int     @id @default(autoincrement())
-  routeId        String  @unique
-  vesselType     String
-  fuelType       String
-  year           Int
-  ghgIntensity   Float
+  id              Int     @id @default(autoincrement())
+  routeId         String  @unique
+  vesselType      String
+  fuelType        String
+  year            Int
+  ghgIntensity    Float
   fuelConsumption Float
-  distance       Float
-  totalEmissions Float
-  isBaseline     Boolean @default(false)
+  distance        Float
+  totalEmissions  Float
+  isBaseline      Boolean @default(false)
 }
 
 model Ship {
-  id          String      @id @default(cuid())
-  name        String
-  year        Int
-  cb          Float       @default(0) // Compliance Baseline (CB)
-  bankedCB    Float       @default(0) // Total banked credits
+  id             String          @id @default(cuid())
+  name           String
+  year           Int
+  cb             Float           @default(0) // Compliance Balance
+  bankedCB       Float           @default(0) // Banked surplus
   bankingRecords BankingRecord[]
+  poolMembers    PoolMember[]
 }
 
 model BankingRecord {
-  id          String   @id @default(cuid())
-  shipId      String
-  year        Int
-  action      String   // 'BANK' or 'APPLY'
-  amount      Float
-  createdAt   DateTime @default(now())
+  id        String   @id @default(cuid())
+  shipId    String
+  year      Int
+  action    String   // 'BANK' or 'APPLY'
+  amount    Float
+  createdAt DateTime @default(now())
 
-  ship        Ship     @relation(fields: [shipId], references: [id])
+  ship      Ship     @relation(fields: [shipId], references: [id])
 }
 
+model Pool {
+  id        String       @id @default(cuid())
+  year      Int
+  createdAt DateTime     @default(now())
+  members   PoolMember[]
+}
 
+model PoolMember {
+  id       String  @id @default(cuid())
+  poolId   String
+  shipId   String
+  cbBefore Float
+  cbAfter  Float
 
+  pool     Pool    @relation(fields: [poolId], references: [id])
+  ship     Ship    @relation(fields: [shipId], references: [id])
+}
