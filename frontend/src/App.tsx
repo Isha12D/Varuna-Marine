@@ -4,7 +4,7 @@ import Navbar from "./Componenets/Navbar";
 import Footer from "./Componenets/Footer";
 import RoutesPage from "./Tabs/Routes";
 import ComparePage from "./Tabs/Compare";
-import BankingPage from "./Tabs/BankingPage";
+import BankingPage from "./Tabs/BankingTab";
 import PoolingPage from "./Tabs/PoolingPage";
 
 function App() {

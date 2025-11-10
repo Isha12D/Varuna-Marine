@@ -21,7 +21,25 @@ model Route {
   isBaseline     Boolean @default(false)
 }
 
+model Ship {
+  id          String      @id @default(cuid())
+  name        String
+  year        Int
+  cb          Float       @default(0) // Compliance Baseline (CB)
+  bankedCB    Float       @default(0) // Total banked credits
+  bankingRecords BankingRecord[]
+}
 
+model BankingRecord {
+  id          String   @id @default(cuid())
+  shipId      String
+  year        Int
+  action      String   // 'BANK' or 'APPLY'
+  amount      Float
+  createdAt   DateTime @default(now())
+
+  ship        Ship     @relation(fields: [shipId], references: [id])
+}
 
 
 
